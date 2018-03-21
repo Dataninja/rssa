@@ -36,7 +36,7 @@ bower_components
 node_modules
 
 # Project specific paths ignore
-out
+#out
 history.json
 reports
 .cache
