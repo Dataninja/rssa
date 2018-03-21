@@ -2,7 +2,6 @@
 /* IMPORT */
 
 import * as _ from 'lodash';
-import * as c from 'chalk';
 import {abstract} from './abstract';
 import config from '../config';
 import Utils from '../utils';
@@ -35,13 +34,13 @@ class txt extends abstract {
 
       const date = new Date ( this.lastUpdate ).toString ();
 
-      this.renderLine ( c.cyan ( `Prev update time: ${date}` ) );
+      this.renderLine ( `Prev update time: ${date}` );
 
     }
 
     const date = new Date ().toString ();
 
-    this.renderLine ( c.cyan ( `Curr update time: ${date}` ) );
+    this.renderLine ( `Curr update time: ${date}` );
 
     this.renderLine ();
 
