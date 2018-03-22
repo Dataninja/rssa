@@ -34,13 +34,21 @@ class abstract {
 
   }
 
-  _getSavePath () {
+  _getSavePath ( tokens = {} ) {
 
     const extension = this._getExtension (),
-          name = this._replaceDateTokens ( config.report.name ),
-          folder = this._replaceDateTokens ( config.report.path );
+          name = this._replaceTokens ( this._replaceDateTokens ( config.report.fullPath ), tokens );
 
-    return path.join ( folder, `${name}${extension}` );
+    return `${name}${extension}`;
+
+  }
+
+  _getPublicPath ( tokens = {} ) {
+
+    const extension = this._getExtension (),
+          name = this._replaceTokens ( this._replaceDateTokens ( config.report.url ), tokens );
+
+    return `${name}${extension}`;
 
   }
 
@@ -165,9 +173,11 @@ class abstract {
 
   /* API */
 
-  save () {
+  save ( filename? ) {
 
-    Utils.file.make ( this._getSavePath (), this.rendered );
+    if (this.rendered) {
+      Utils.file.make ( filename || this.savePath, this.rendered );
+    }
 
   }
 
@@ -177,7 +187,7 @@ class abstract {
 
   }
 
-  async run ( save: boolean = config.report.save, open: boolean = false ) {
+  async run ( save: boolean = config.report.save, open: boolean = config.report.open ) {
 
     await this.init ();
     await this.render ();

@@ -37,32 +37,84 @@ class rss extends abstract {
 
   }
 
-  renderFeed () {
+  renderFeed ( ) {
 
-    this.rendered += `
-  <title>Example feed</title>
-  <link rel="self" href="http://fakedomain.com/rss"/>
+    if ( !_.includes(config.report.fullPath, 'group') && !_.includes(config.report.fullPath, 'feed') ) {
+      this.rendered += `
+  <title>Feed</title>
+  <link rel="self" href="${this._getPublicPath ()}"/>
   <updated>${new Date().toISOString()}</updated>
   <author>
     <name>John Doe</name>
   </author>
-  <id>http://fakedomain.com/rss</id>
+  <id>${this._getPublicPath ()}</id>
 `;
+    }
 
-    Utils.feed.walk ( this.feeds, _.noop, ( group, config ) => {
+    Utils.feed.walk ( 
+    
+      this.feeds,
+      
+      _.noop,
+      
+      [
+        ( group, cnf ) => {
+          if (_.includes(config.report.fullPath, 'group') && !_.includes(config.report.fullPath, 'feed')) {
+            this.rendered = '';
+            this.renderPrefix ();
+            this.rendered += `
+  <title>Feed of ${group.name}</title>
+  <link rel="self" href="${this._getPublicPath ( { group: group.name } )}"/>
+  <updated>${new Date().toISOString()}</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>${this._getPublicPath ( { group: group.name } )}</id>
+`;
+          }
+        },
+        ( group, cnf ) => {
+          if (_.includes(config.report.fullPath, 'group') && !_.includes(config.report.fullPath, 'feed')) {
+            this.renderSuffix ();
+            this.save( this._getSavePath ( { group: group.name } ) );
+            this.rendered = '';
+          }
+        }
+      ],
+      
+      ( feed, cnf, depth, group ) => {
 
-      //this.renderLine ( group.name, 'h4' );
+        if ( cnf.filter && !cnf.filter ( this.tokensAll[cnf.url], this.tokensAllOld[cnf.url], this.tokensAll ) ) return;
 
-    }, ( feed, config ) => {
+        const template = this._getTemplate ( cnf, 'rss', 'txt' ),
+            lines = this._parseTemplate ( template, this.tokensAll[cnf.url], this.tokensAllOld[cnf.url], this.tokensAll );
 
-      if ( config.filter && !config.filter ( this.tokensAll[config.url], this.tokensAllOld[config.url], this.tokensAll ) ) return;
+        if (_.includes(config.report.fullPath, 'feed')) {
+          this.rendered = '';
+          this.renderPrefix ();
+          this.rendered += `
+  <title>Feed of ${feed.name} (${group.name})</title>
+  <link rel="self" href="${this._getPublicPath ( { group: group.name, feed: feed.name } )}"/>
+  <updated>${new Date().toISOString()}</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>${this._getPublicPath ( { group: group.name, feed: feed.name } )}</id>
+`;
+          this.renderLines ( lines );
+          this.renderSuffix ();
+          this.save ( this._getSavePath ( { group: group.name, feed: feed.name } ) );
+          this.rendered = '';
 
-      const template = this._getTemplate ( config, 'rss', 'txt' ),
-            lines = this._parseTemplate ( template, this.tokensAll[config.url], this.tokensAllOld[config.url], this.tokensAll );
+        } else {
 
-      this.renderLines ( lines );
+          this.renderLines ( lines );
 
-    });
+        }
+
+      }
+
+    );
 
   }
 
@@ -74,7 +126,7 @@ class rss extends abstract {
 
   renderLine ( line = '' ) {
 
-    this.rendered += `${line}`.replace(/ \& /g," &amp; ");
+    this.rendered += `${line}`;
 
   }
 
@@ -82,15 +134,21 @@ class rss extends abstract {
 
     this.rendered = '';
 
-    this.renderPrefix ();
+    if ( !_.includes(config.report.fullPath, 'group') && !_.includes(config.report.fullPath, 'feed') ) {
+      this.renderPrefix ();
+    }
+  
     this.renderFeed ();
-    this.renderSuffix ();
+
+    if ( !_.includes(config.report.fullPath, 'group') && !_.includes(config.report.fullPath, 'feed') ) {
+      this.renderSuffix ();
+    }
 
   }
 
   /* API */
 
-  async run ( save: boolean = config.report.save, open: boolean = true ) {
+  async run ( save: boolean = config.report.save, open: boolean = config.report.open ) {
 
     return super.run ( save, open );
 

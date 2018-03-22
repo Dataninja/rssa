@@ -73,9 +73,12 @@ const Utils = {
 
           objCallback ( group, newConfig, depth );
 
-          groupCallback ( group, newConfig, depth );
+          if (_.isFunction(groupCallback)) groupCallback ( group, newConfig, depth, obj );
+          if (_.isArray(groupCallback) && groupCallback.length) groupCallback[0] ( group, newConfig, depth, obj );
 
           Utils.feed.walk ( group, objCallback, groupCallback, feedCallback, sortGroups, sortFeeds, newConfig, depth + 1 );
+
+          if (_.isArray(groupCallback) && groupCallback.length > 1) groupCallback[1] ( group, newConfig, depth, obj );
 
         });
 
@@ -89,9 +92,9 @@ const Utils = {
 
           const newConfig = _.merge ( {}, config, Utils.feed.getConfig ( feed ) );
 
-          objCallback ( feed, newConfig, depth );
+          objCallback ( feed, newConfig, depth, obj );
 
-          feedCallback ( feed, newConfig, depth );
+          feedCallback ( feed, newConfig, depth, obj );
 
         });
 
@@ -101,9 +104,9 @@ const Utils = {
 
         const newConfig = _.merge ( {}, config, Utils.feed.getConfig ( obj.feed ) );
 
-        objCallback ( obj.feed, newConfig, depth );
+        objCallback ( obj.feed, newConfig, depth, obj );
 
-        feedCallback ( obj.feed, newConfig, depth );
+        feedCallback ( obj.feed, newConfig, depth, obj );
 
       }
 
