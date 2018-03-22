@@ -82,7 +82,7 @@ class html extends abstract {
 
   /* API */
 
-  async run ( save: boolean = config.report.save, open: boolean = true ) {
+  async run ( save: boolean = config.report.save, open: boolean = config.report.open ) {
 
     return super.run ( save, open );
 

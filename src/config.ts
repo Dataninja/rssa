@@ -13,6 +13,7 @@ let config = Utils.require.json ( path.join ( __dirname, '../../config.json' ) )
 if ( argv.config ) {
 
   config = _.merge ( config, Utils.require.json ( argv.config ) );
+  config.report.fullPath = path.join ( config.report.path, config.report.name );
 
 }
 
