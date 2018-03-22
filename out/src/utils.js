@@ -57,22 +57,27 @@ const Utils = {
                 groups.forEach(group => {
                     const newConfig = _.merge({}, config, Utils.feed.getConfig(group));
                     objCallback(group, newConfig, depth);
-                    groupCallback(group, newConfig, depth);
+                    if (_.isFunction(groupCallback))
+                        groupCallback(group, newConfig, depth, obj);
+                    if (_.isArray(groupCallback) && groupCallback.length)
+                        groupCallback[0](group, newConfig, depth, obj);
                     Utils.feed.walk(group, objCallback, groupCallback, feedCallback, sortGroups, sortFeeds, newConfig, depth + 1);
+                    if (_.isArray(groupCallback) && groupCallback.length > 1)
+                        groupCallback[1](group, newConfig, depth, obj);
                 });
             }
             if (obj.feeds) {
                 const feeds = sortFeeds ? _.sortBy(obj.feeds, 'url') : obj.feeds;
                 feeds.forEach(feed => {
                     const newConfig = _.merge({}, config, Utils.feed.getConfig(feed));
-                    objCallback(feed, newConfig, depth);
-                    feedCallback(feed, newConfig, depth);
+                    objCallback(feed, newConfig, depth, obj);
+                    feedCallback(feed, newConfig, depth, obj);
                 });
             }
             if (obj.feed) {
                 const newConfig = _.merge({}, config, Utils.feed.getConfig(obj.feed));
-                objCallback(obj.feed, newConfig, depth);
-                feedCallback(obj.feed, newConfig, depth);
+                objCallback(obj.feed, newConfig, depth, obj);
+                feedCallback(obj.feed, newConfig, depth, obj);
             }
         },
         walkGroups(obj, callback, sortGroups) {

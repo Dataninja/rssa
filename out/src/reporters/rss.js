@@ -32,38 +32,84 @@ class rss extends abstract_1.abstract {
 `;
     }
     renderFeed() {
-        this.rendered += `
-  <title>Example feed</title>
-  <link rel="self" href="http://fakedomain.com/rss"/>
+        if (!_.includes(config_1.default.report.fullPath, 'group') && !_.includes(config_1.default.report.fullPath, 'feed')) {
+            this.rendered += `
+  <title>Feed</title>
+  <link rel="self" href="${this._getPublicPath()}"/>
   <updated>${new Date().toISOString()}</updated>
   <author>
     <name>John Doe</name>
   </author>
-  <id>http://fakedomain.com/rss</id>
+  <id>${this._getPublicPath()}</id>
 `;
-        utils_1.default.feed.walk(this.feeds, _.noop, (group, config) => {
-            //this.renderLine ( group.name, 'h4' );
-        }, (feed, config) => {
-            if (config.filter && !config.filter(this.tokensAll[config.url], this.tokensAllOld[config.url], this.tokensAll))
+        }
+        utils_1.default.feed.walk(this.feeds, _.noop, [
+            (group, cnf) => {
+                if (_.includes(config_1.default.report.fullPath, 'group') && !_.includes(config_1.default.report.fullPath, 'feed')) {
+                    this.rendered = '';
+                    this.renderPrefix();
+                    this.rendered += `
+  <title>Feed of ${group.name}</title>
+  <link rel="self" href="${this._getPublicPath({ group: group.name })}"/>
+  <updated>${new Date().toISOString()}</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>${this._getPublicPath({ group: group.name })}</id>
+`;
+                }
+            },
+            (group, cnf) => {
+                if (_.includes(config_1.default.report.fullPath, 'group') && !_.includes(config_1.default.report.fullPath, 'feed')) {
+                    this.renderSuffix();
+                    this.save(this._getSavePath({ group: group.name }));
+                    this.rendered = '';
+                }
+            }
+        ], (feed, cnf, depth, group) => {
+            if (cnf.filter && !cnf.filter(this.tokensAll[cnf.url], this.tokensAllOld[cnf.url], this.tokensAll))
                 return;
-            const template = this._getTemplate(config, 'rss', 'txt'), lines = this._parseTemplate(template, this.tokensAll[config.url], this.tokensAllOld[config.url], this.tokensAll);
-            this.renderLines(lines);
+            const template = this._getTemplate(cnf, 'rss', 'txt'), lines = this._parseTemplate(template, this.tokensAll[cnf.url], this.tokensAllOld[cnf.url], this.tokensAll);
+            if (_.includes(config_1.default.report.fullPath, 'feed')) {
+                this.rendered = '';
+                this.renderPrefix();
+                this.rendered += `
+  <title>Feed of ${feed.name} (${group.name})</title>
+  <link rel="self" href="${this._getPublicPath({ group: group.name, feed: feed.name })}"/>
+  <updated>${new Date().toISOString()}</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>${this._getPublicPath({ group: group.name, feed: feed.name })}</id>
+`;
+                this.renderLines(lines);
+                this.renderSuffix();
+                this.save(this._getSavePath({ group: group.name, feed: feed.name }));
+                this.rendered = '';
+            }
+            else {
+                this.renderLines(lines);
+            }
         });
     }
     renderLines(lines) {
         lines.forEach(line => this.renderLine(line));
     }
     renderLine(line = '') {
-        this.rendered += `${line}`.replace(/ \& /g, " &amp; ");
+        this.rendered += `${line}`;
     }
     render() {
         this.rendered = '';
-        this.renderPrefix();
+        if (!_.includes(config_1.default.report.fullPath, 'group') && !_.includes(config_1.default.report.fullPath, 'feed')) {
+            this.renderPrefix();
+        }
         this.renderFeed();
-        this.renderSuffix();
+        if (!_.includes(config_1.default.report.fullPath, 'group') && !_.includes(config_1.default.report.fullPath, 'feed')) {
+            this.renderSuffix();
+        }
     }
     /* API */
-    run(save = config_1.default.report.save, open = true) {
+    run(save = config_1.default.report.save, open = config_1.default.report.open) {
         const _super = name => super[name];
         return __awaiter(this, void 0, void 0, function* () {
             return _super("run").call(this, save, open);

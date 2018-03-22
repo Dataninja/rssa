@@ -52,7 +52,7 @@ class html extends abstract_1.abstract {
         this.renderFeed();
     }
     /* API */
-    run(save = config_1.default.report.save, open = true) {
+    run(save = config_1.default.report.save, open = config_1.default.report.open) {
         const _super = name => super[name];
         return __awaiter(this, void 0, void 0, function* () {
             return _super("run").call(this, save, open);

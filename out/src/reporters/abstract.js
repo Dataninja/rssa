@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const openFile = require("open");
-const path = require("path");
 const config_1 = require("../config");
 const feeds_1 = require("../feeds");
 const history_1 = require("../history");
@@ -30,9 +29,13 @@ class abstract {
             return this._getTemplate(config, fallback);
         return config.template;
     }
-    _getSavePath() {
-        const extension = this._getExtension(), name = this._replaceDateTokens(config_1.default.report.name), folder = this._replaceDateTokens(config_1.default.report.path);
-        return path.join(folder, `${name}${extension}`);
+    _getSavePath(tokens = {}) {
+        const extension = this._getExtension(), name = this._replaceTokens(this._replaceDateTokens(config_1.default.report.fullPath), tokens);
+        return `${name}${extension}`;
+    }
+    _getPublicPath(tokens = {}) {
+        const extension = this._getExtension(), name = this._replaceTokens(this._replaceDateTokens(config_1.default.report.url), tokens);
+        return `${name}${extension}`;
     }
     _replaceWith(str, search, replacement) {
         const regex = new RegExp(_.escapeRegExp(search), 'g');
@@ -114,13 +117,15 @@ class abstract {
     /* RENDER */
     render() { }
     /* API */
-    save() {
-        utils_1.default.file.make(this._getSavePath(), this.rendered);
+    save(filename) {
+        if (this.rendered) {
+            utils_1.default.file.make(filename || this.savePath, this.rendered);
+        }
     }
     open() {
         openFile(this.savePath);
     }
-    run(save = config_1.default.report.save, open = false) {
+    run(save = config_1.default.report.save, open = config_1.default.report.open) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.init();
             yield this.render();
