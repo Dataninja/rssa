@@ -17,7 +17,7 @@ const utils_1 = require("../utils");
 class rss extends abstract_1.abstract {
     /* HELPERS */
     _getExtension() {
-        return '.rss';
+        return '.rss.xml';
     }
     /* RENDER */
     renderPrefix() {
