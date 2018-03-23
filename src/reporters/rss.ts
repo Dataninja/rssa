@@ -14,7 +14,7 @@ class rss extends abstract {
 
   _getExtension () {
 
-    return '.rss';
+    return '.rss.xml';
 
   }
 
