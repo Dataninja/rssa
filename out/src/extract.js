@@ -12,20 +12,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const cheerio = require("cheerio");
 const fetch_1 = require("./fetch");
+const history_1 = require("./history");
 /* EXTRACT */
 const Extract = {
     page(options) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { url, tokens, headless } = options, page = yield fetch_1.default.do(url, headless), $ = cheerio['load'](page);
-            return Extract.tokens(page, $, tokens);
+            const { url, tokens, headless } = options, page = yield fetch_1.default.do(url, headless), history = yield history_1.default.read(), last = history_1.default.getLast(history, url), $ = cheerio['load'](page);
+            return Extract.tokens(page, $, tokens, last && last['tokens']);
         });
     },
-    tokens(page, $, tokens) {
+    tokens(page, $, tokens, oldTokens) {
         return _.transform(tokens, (acc, value, key) => {
-            acc[key] = Extract.token(page, $, value);
+            acc[key] = Extract.token(page, $, value, oldTokens && oldTokens[key]);
         }, {});
     },
-    token(page, $, options) {
+    token(page, $, options, oldToken) {
         const extractor = _.isArray(options) ? options[0] : options, callback = _.isArray(options) ? options[1] : _.identity;
         let value;
         if (_.isRegExp(extractor)) {
@@ -36,7 +37,7 @@ const Extract = {
             value = $(extractor).text();
         }
         else if (_.isFunction(extractor)) {
-            value = extractor(page, $);
+            value = extractor(page, $, oldToken);
         }
         else {
             throw new Error('Unsupported extractor');
